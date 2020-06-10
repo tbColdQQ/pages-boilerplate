@@ -7,6 +7,7 @@
  * @LastEditTime: 2020-06-10 14:11:02
  */
 const sass = require('sass')
+const loadGruntTasks = require('load-grunt-tasks')
 
 module.exports = grunt => {
     grunt.registerTask('foo', () => {
@@ -63,6 +64,61 @@ module.exports = grunt => {
                     dest: 'dist'
                 }]
             }
+        },
+        babel: {
+            options: {
+                sourceMap: true,
+                presets: ['@babel/preset-env']
+            },
+            main: {
+                files: {
+                    'dist/js/main.js': 'src/assets/scripts/main.js'
+                }
+            }
+        },
+        uglify: {
+            main: {
+                options: {
+                    mangle: true, //混淆变量名
+                    comments: false //false（删除全部注释），some（保留@preserve @license @cc_on等注释）
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'dist',
+                        src: ['js/*.js'],
+                        dest: 'dist'
+                    }
+                ]
+            }
+        },
+        imagemin: {
+            main: {
+                options: {
+                    optimizationLevel: 7,
+                    pngquant: true
+                },
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src',
+                        src: ['assets/images/*.{png,jpg,jpeg,gif,webp,svg}'],
+                        dest: 'dist'
+                    }
+                ]
+            }
+        },
+        copy: {
+            fonts: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'src',
+                        src: ['assets/fonts/*'],
+                        dest: 'dist'
+                    }
+                ]
+            }
         }
     })
 
@@ -74,11 +130,16 @@ module.exports = grunt => {
         console.log(this)
     })
 
-    grunt.loadNpmTasks('grunt-contrib-htmlmin')
+    // grunt.loadNpmTasks('grunt-contrib-htmlmin')
 
-    grunt.loadNpmTasks('grunt-contrib-clean')
+    // grunt.loadNpmTasks('grunt-contrib-clean')
 
-    grunt.loadNpmTasks('grunt-sass')
+    // grunt.loadNpmTasks('grunt-sass')
 
-    grunt.registerTask('default', ['clean', 'htmlmin', 'sass'])
+    // yarn add grunt-babel @babel/core @babel/preset-env
+    // grunt.loadNpmTasks('grunt-babel')
+
+    loadGruntTasks(grunt)
+
+    grunt.registerTask('default', ['clean', 'htmlmin', 'sass', 'babel', 'uglify', 'imagemin', 'copy'])
 }
