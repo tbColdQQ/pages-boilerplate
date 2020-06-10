@@ -119,6 +119,16 @@ module.exports = grunt => {
                     }
                 ]
             }
+        },
+        watch: {
+            js: {
+                files: ['src/assets/scripts/*.js'],
+                tasks: ['babel', 'uglify']
+            },
+            css: {
+                files: ['src/assets/styles/*.scss'],
+                tasks: ['sass']
+            }
         }
     })
 
@@ -141,5 +151,17 @@ module.exports = grunt => {
 
     loadGruntTasks(grunt)
 
-    grunt.registerTask('default', ['clean', 'htmlmin', 'sass', 'babel', 'uglify', 'imagemin', 'copy'])
+    grunt.registerTask('default', ['clean', 'htmlmin', 'sass', 'babel', 'uglify', 'imagemin', 'copy', 'watch'])
+
+    /**
+     * grunt-contrib-clean
+     * grunt-contrib-htmlmin
+     * grunt-babel
+     * grunt-contrib-uglify
+     * grunt-sass
+     * grunt-contrib-imagemin
+     * grunt-contrib-copy
+     * grunt-contrib-watch
+     * load-grunt-tasks
+     */
 }

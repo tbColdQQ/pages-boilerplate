@@ -7,4 +7,5 @@ $(($) => {
     $body.animate({ scrollTop: 0 }, 600)
     return false
   })
+  console.log('11111111111111')
 })
