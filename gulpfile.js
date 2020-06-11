@@ -39,12 +39,48 @@ const clean = done => {
     // return del('dist/assets/styles')
 }
 
-const move = done => {
+const sass = require('gulp-sass')
+const style = done => {
+    // src 中的options选项，配置base可将文件所在的目录同时拷贝到目标目录下
     return src('src/assets/styles/*.scss', { base: 'src' })
+        .pipe(sass({outputStyle: 'expanded'}))  // expanded 可以将样式文件内的括号展开，而不是与最后属性在同一行
         .pipe(dest('dist'))
 }
 
-exports.testmove = done => {
-    series(clean, move)
-    done()
+const babel = require('gulp-babel')
+const script = () => {
+    return src('src/assets/scripts/*.js', { base: 'src' })
+        .pipe(babel({ presets: ['@babel/preset-env']}))
+        .pipe(dest('dist'))
+}
+
+const swig = require('gulp-swig')
+const data = {
+    pkg: require('./package.json')
+}
+const page = () => {
+    return src('src/**/*.html', { base: 'src' })
+        .pipe(swig({ data }))
+        .pipe(dest('dist'))
+}
+
+const imagemin = require('gulp-imagemin')
+const image = () => {
+    return src('src/assets/images/**', { base: 'src' })
+        .pipe(imagemin())
+        .pipe(dest('dist'))
+}
+
+const font = () => {
+    return src('src/assets/fonts/**', { base: 'src' })
+        .pipe(imagemin())
+        .pipe(dest('dist'))
+}
+
+const test = series(clean, parallel(style, script, page))
+
+module.exports = {
+    style,
+    clean,
+    test
 }
