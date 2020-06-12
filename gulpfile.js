@@ -17,6 +17,17 @@ const del = require('del')
      */
 const { src, dest, parallel, series, watch } = require('gulp')
 
+const browserSync = require('browser-sync')
+const bs = browserSync.create()
+
+/**
+ * loadPlugins 可以自动加载安装的gulp插件，使用此插件后，
+ * 其他gulp插件都可以用plugins.XXX替代，如：plugins.sass, plugins.swig
+ */
+// const loadPlugins = require('gulp-load-plugins')
+// const plugins = loadPlugins()
+
+
 // 实现这个项目的构建任务
 // yarn gulp test
 exports.test = done => {
@@ -39,12 +50,17 @@ const clean = async done => {
     // return del('dist/assets/styles')
 }
 
+const cleantemp = async () => {
+    return await del('temp')
+}
+
 const sass = require('gulp-sass')
 const style = done => {
     // src 中的options选项，配置base可将文件所在的目录同时拷贝到目标目录下
     return src('src/assets/styles/*.scss', { base: 'src' })
         .pipe(sass({ outputStyle: 'expanded' })) // expanded 可以将样式文件内的括号展开，而不是与最后属性在同一行
         .pipe(dest('temp'))
+        .pipe(bs.reload({stream: true}))    // stream: tue 指以流的方式更新浏览器内容
 }
 
 const babel = require('gulp-babel')
@@ -52,6 +68,7 @@ const script = () => {
     return src('src/assets/scripts/*.js', { base: 'src' })
         .pipe(babel({ presets: ['@babel/preset-env'] }))
         .pipe(dest('temp'))
+        .pipe(bs.reload({stream: true}))
 }
 
 const swig = require('gulp-swig')
@@ -60,8 +77,9 @@ const data = {
 }
 const page = () => {
     return src('src/**/*.html', { base: 'src' })
-        .pipe(swig({ data }))
+    .pipe(swig({ data, defaults: { cache: false }}))
         .pipe(dest('temp'))
+        .pipe(bs.reload({ stream: true }))
 }
 
 const imagemin = require('gulp-imagemin')
@@ -103,16 +121,22 @@ const ur = () => {
         .pipe(dest('dist'))
 }
 
-const browserSync = require('browser-sync')
-const bs = browserSync.create()
 const server = () => {
-    // watch('src/**/*.html')
+    watch('src/**/*.html', page)
+    watch('src/assets/styles/*.scss', style)
+    watch('src/assets/scripts/*.js', script)
+    watch([
+        'src/assets/images/**',
+        'src/assets/fonts/**',
+        'public/**',
+    ], bs.reload)
     bs.init({
         notify: false, // 关闭页面中的提示
         port: 8888,
         open: false, // 取消自动打开浏览器
+        // files: 'temp/**',   // dist下的所有文件发生变化时通知bs更新浏览器。如果在任务中使用了bs.reload()，则不需要使用此属性
         server: {
-            baseDir: 'dist',
+            baseDir: ['temp', 'src', 'public'],
             routes: {
                 '/node_modules': 'node_modules'
             }
@@ -122,9 +146,11 @@ const server = () => {
 
 const build1 = series(clean, parallel(style, script, page, font, image, extra))
 
-const build = series(clean, parallel(series(parallel(page, script, style), ur), font, image, extra))
+const build = series(clean, parallel(series(parallel(page, script, style), ur), font, image, extra), cleantemp)
 
 const test = series(clean, font)
+
+const dev = series(clean, parallel(style, script, page), server)
 
 module.exports = {
     style,
@@ -133,5 +159,21 @@ module.exports = {
     build,
     test,
     ur,
-    server
+    server,
+    dev
 }
+
+/**
+ * gulp-sass    // sass编译
+ * gulp-clean-css   // 压缩css
+ * del  // 删除指定目录
+ * gulp-babel
+ * gulp-uglify // 压缩js
+ * gulp-swig    // 解析html
+ * gulp-htmlmin //压缩html
+ * gulp-useref  // 资源合并
+ * gulp-imagemin    // 压缩图片
+ * gulp-if
+ * gulp-load-plugins
+ * browser-sync
+ */
